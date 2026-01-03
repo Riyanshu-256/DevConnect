@@ -1,7 +1,7 @@
 const express = require("express");
 const bcrypt = require("bcrypt");
 const { userAuth } = require("../middlewares/auth");
-const { validateEditProfiledata } = require("../utils/validation");
+const { validateEditProfileData } = require("../utils/validation");
 const User = require("../models/user");
 const ConnectionRequest = require("../models/connectionRequest");
 
@@ -20,7 +20,7 @@ profileRouter.get("/profile", userAuth, async (req, res) => {
 // Edit Profile Route - to update logged-in user's profile
 profileRouter.patch("/profile/edit", userAuth, async (req, res) => {
   try {
-    if (!validateEditProfiledata(req)) {
+    if (!validateEditProfileData(req)) {
       throw new Error("Invalid edit request!");
     }
     const loggedInUser = req.user;

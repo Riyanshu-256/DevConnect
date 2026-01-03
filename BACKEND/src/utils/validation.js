@@ -1,4 +1,30 @@
-const validateEditProfiledata = (req) => {
+const validateSignUpData = (req) => {
+  const { firstName, lastName, emailId, password, age, gender } = req.body;
+
+  if (!firstName || !lastName) {
+    throw new Error("First name and last name are required");
+  }
+
+  if (!emailId) {
+    throw new Error("Email is required");
+  }
+
+  if (!password || password.length < 6) {
+    throw new Error("Password must be at least 6 characters");
+  }
+
+  if (age && age < 18) {
+    throw new Error("Age must be at least 18");
+  }
+
+  if (gender && !["Male", "Female", "Other"].includes(gender)) {
+    throw new Error("Invalid gender value");
+  }
+
+  return true;
+};
+
+const validateEditProfileData = (req) => {
   const allowedFields = [
     "firstName",
     "lastName",
@@ -31,4 +57,7 @@ const validateEditProfiledata = (req) => {
   return true;
 };
 
-module.exports = { validateEditProfiledata };
+module.exports = {
+  validateSignUpData,
+  validateEditProfileData,
+};
