@@ -1,6 +1,11 @@
-import { X, UserPlus, BadgeCheck } from "lucide-react";
+import { X, UserPlus, BadgeCheck, Loader2 } from "lucide-react";
 
 const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+
+const statusStyles = {
+  interested: "bg-green-500/20 text-green-400 border-green-500/30",
+  ignored: "bg-red-500/20 text-red-400 border-red-500/30",
+};
 
 const UserCard = ({ user, onIgnore, onInterested, loading = false }) => {
   if (!user) return null;
@@ -12,15 +17,27 @@ const UserCard = ({ user, onIgnore, onInterested, loading = false }) => {
     about,
     skills = [],
     verified = true,
+    status, // 👈 interested | ignored
   } = user;
+
+  const isActionTaken = Boolean(status);
 
   return (
     <div className="relative w-[360px] rounded-2xl bg-[#0f141a] border border-white/10 p-6 text-center shadow-lg hover:shadow-2xl transition-all duration-300">
-      {/* ❌ Ignore (Close) */}
+      {/* 🔖 Status Badge */}
+      {status && (
+        <span
+          className={`absolute top-4 left-4 px-3 py-1 text-xs rounded-full border ${statusStyles[status]}`}
+        >
+          {status === "interested" ? "Interested" : "Ignored"}
+        </span>
+      )}
+
+      {/* ❌ Quick Ignore Icon */}
       <button
-        disabled={loading}
+        disabled={loading || isActionTaken}
         onClick={onIgnore}
-        className="absolute top-4 right-4 text-gray-400 hover:text-red-400 transition disabled:opacity-50"
+        className="absolute top-4 right-4 text-gray-400 hover:text-red-400 transition disabled:opacity-40"
       >
         <X size={18} />
       </button>
@@ -35,7 +52,7 @@ const UserCard = ({ user, onIgnore, onInterested, loading = false }) => {
         />
       </div>
 
-      {/* 🧑 Name + Verified */}
+      {/* 🧑 Name */}
       <h2 className="text-lg font-semibold text-white flex items-center justify-center gap-1">
         {firstName} {lastName}
         {verified && <BadgeCheck size={16} className="text-primary" />}
@@ -64,21 +81,31 @@ const UserCard = ({ user, onIgnore, onInterested, loading = false }) => {
       <div className="flex gap-3 mt-6">
         {/* Ignore */}
         <button
-          disabled={loading}
+          disabled={loading || isActionTaken}
           onClick={onIgnore}
-          className="flex-1 py-2 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 transition disabled:opacity-50"
+          className="flex-1 py-2 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 transition disabled:opacity-40"
         >
-          Ignore
+          {loading && !status ? (
+            <Loader2 className="animate-spin mx-auto" size={16} />
+          ) : (
+            "Ignore"
+          )}
         </button>
 
         {/* Interested */}
         <button
-          disabled={loading}
+          disabled={loading || isActionTaken}
           onClick={onInterested}
-          className="flex-1 py-2 rounded-xl bg-primary text-black font-medium hover:opacity-90 transition flex items-center justify-center gap-2 disabled:opacity-50"
+          className="flex-1 py-2 rounded-xl bg-primary text-black font-medium hover:opacity-90 transition flex items-center justify-center gap-2 disabled:opacity-40"
         >
-          <UserPlus size={16} />
-          Interested
+          {loading && !status ? (
+            <Loader2 className="animate-spin" size={16} />
+          ) : (
+            <>
+              <UserPlus size={16} />
+              Interested
+            </>
+          )}
         </button>
       </div>
     </div>

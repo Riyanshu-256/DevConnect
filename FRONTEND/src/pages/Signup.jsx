@@ -14,6 +14,11 @@ import { BASE_URL } from "../utils/constants";
 
 const DEFAULT_PHOTO = "https://cdn-icons-png.flaticon.com/512/4140/4140047.png";
 
+/* =======================
+   PASSWORD RULE
+======================= */
+const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&]).{8,}$/;
+
 const Signup = () => {
   const navigate = useNavigate();
 
@@ -42,7 +47,7 @@ const Signup = () => {
   const [error, setError] = useState("");
 
   /* =======================
-     HANDLERS
+     HELPERS
   ======================= */
   const updateField = (key, value) =>
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -50,15 +55,30 @@ const Signup = () => {
   const addSkill = () => {
     const value = skillInput.trim();
     if (!value || skills.includes(value)) return;
-    setSkills([...skills, value]);
+    setSkills((prev) => [...prev, value]);
     setSkillInput("");
   };
 
-  const removeSkill = (skill) => setSkills(skills.filter((s) => s !== skill));
+  const removeSkill = (skill) =>
+    setSkills((prev) => prev.filter((s) => s !== skill));
 
+  /* =======================
+     SUBMIT
+  ======================= */
   const handleSignup = async (e) => {
     e.preventDefault();
     setError("");
+
+    /* 🔐 Frontend validation */
+    if (!passwordRegex.test(form.password)) {
+      return setError(
+        "Password must be at least 8 characters and include a number & special symbol"
+      );
+    }
+
+    if (form.age && Number(form.age) < 18) {
+      return setError("You must be at least 18 years old");
+    }
 
     try {
       setLoading(true);
@@ -71,7 +91,7 @@ const Signup = () => {
 
       navigate("/login");
     } catch (err) {
-      setError(err.response?.data?.error || "Signup failed");
+      setError(err.response?.data?.message || "Signup failed");
     } finally {
       setLoading(false);
     }
@@ -82,18 +102,18 @@ const Signup = () => {
   ======================= */
   return (
     <div className="min-h-screen flex items-center justify-center bg-auth-gradient px-4">
-      <div className="auth-card w-full max-w-2xl animate-fadeUp my-10">
+      <div className="auth-card w-full max-w-2xl my-10 animate-fadeUp">
         {/* Header */}
-        <div className="text-center mb-8 ">
+        <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-white">Create your account</h1>
           <p className="text-gray-400 text-sm mt-2">
             Join <span className="text-primary font-medium">DevConnect</span>{" "}
-            and start building your professional network
+            and build your network
           </p>
         </div>
 
         {/* Error */}
-        {error && <div className="alert alert-error text-sm mb-5">{error}</div>}
+        {error && <div className="alert alert-error text-sm mb-6">{error}</div>}
 
         {/* Form */}
         <form onSubmit={handleSignup} className="space-y-6">
@@ -140,7 +160,7 @@ const Signup = () => {
               />
               <button
                 type="button"
-                onClick={() => setShowPassword((p) => !p)}
+                onClick={() => setShowPassword((prev) => !prev)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
               >
                 {showPassword ? <FaEyeSlash /> : <FaEye />}
@@ -177,7 +197,7 @@ const Signup = () => {
           <textarea
             rows={3}
             className="textarea textarea-bordered w-full"
-            placeholder="Briefly describe yourself (role, interests, goals)"
+            placeholder="Briefly describe yourself"
             value={form.about}
             onChange={(e) => updateField("about", e.target.value)}
           />
@@ -193,7 +213,12 @@ const Signup = () => {
                 placeholder="Add skill and press Enter"
                 value={skillInput}
                 onChange={(e) => setSkillInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && addSkill()}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addSkill();
+                  }
+                }}
               />
               <button
                 type="button"
@@ -225,7 +250,7 @@ const Signup = () => {
             )}
           </div>
 
-          {/* Photo URL */}
+          {/* Photo */}
           <Input
             icon={<FaUserCircle />}
             label="Profile Photo URL"
@@ -247,15 +272,12 @@ const Signup = () => {
         </form>
 
         {/* Footer */}
-        <div className="text-center mt-6 space-y-2">
+        <div className="text-center mt-6">
           <p className="text-sm text-gray-400">
             Already have an account?{" "}
             <Link to="/login" className="text-primary hover:underline">
               Sign in
             </Link>
-          </p>
-          <p className="text-xs text-gray-500">
-            Secure authentication using HttpOnly cookies
           </p>
         </div>
       </div>

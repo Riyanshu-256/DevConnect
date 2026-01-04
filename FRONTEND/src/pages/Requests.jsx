@@ -1,31 +1,20 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { BASE_URL } from "../utils/constants";
 import { setRequests, removeRequest } from "../store/slices/requestSlice";
-import Skeleton from "../components/common/Skeleton";
 import RequestCard from "../components/cards/RequestCard";
+import { SkeletonRequestCard } from "../components/common/Skeleton";
 
 const Requests = () => {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
-
-  const user = useSelector((store) => store.user);
   const requests = useSelector((store) => store.requests);
 
   const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState(null);
+  const [loadingId, setLoadingId] = useState(null);
 
-  // 🔐 Auth Guard
+  /* 🔹 Fetch received requests */
   useEffect(() => {
-    if (!user) navigate("/login");
-  }, [user, navigate]);
-
-  // 📡 Fetch Requests
-  useEffect(() => {
-    if (!user) return;
-
     const fetchRequests = async () => {
       try {
         const res = await axios.get(`${BASE_URL}/user/request/received`, {
@@ -34,103 +23,84 @@ const Requests = () => {
 
         dispatch(setRequests(res.data.data || []));
       } catch (err) {
-        err.response?.status === 401
-          ? navigate("/login")
-          : console.error("Failed to fetch requests");
+        console.error("Failed to fetch requests", err);
       } finally {
         setLoading(false);
       }
     };
 
     fetchRequests();
-  }, [dispatch, user, navigate]);
+  }, [dispatch]);
 
-  // ✅ Accept / ❌ Reject
-  const handleReview = async (status, requestId) => {
+  /* 🔹 Accept / Reject handler */
+  const handleReview = async (requestId, action) => {
     try {
-      setActionLoading(requestId);
+      setLoadingId(requestId);
 
       await axios.post(
-        `${BASE_URL}/request/review/${status}/${requestId}`,
+        `${BASE_URL}/request/review/${action}/${requestId}`,
         {},
         { withCredentials: true }
       );
 
+      // optimistic UI
       dispatch(removeRequest(requestId));
     } catch (err) {
-      err.response?.status === 401
-        ? navigate("/login")
-        : console.error("Request action failed");
+      console.error(err);
     } finally {
-      setActionLoading(null);
+      setLoadingId(null);
     }
   };
 
-  // ⏳ Loading UI
+  /* 🔹 Loading State */
   if (loading) {
     return (
-      <div className="min-h-[calc(100vh-200px)] px-4 py-8">
-        <div className="max-w-5xl mx-auto space-y-6">
-          <Skeleton variant="title" className="h-8 w-64" />
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="card-modern p-6">
-              <div className="flex gap-6">
-                <Skeleton variant="avatar" />
-                <div className="flex-1 space-y-3">
-                  <Skeleton variant="title" className="h-6 w-48" />
-                  <Skeleton variant="text" />
-                  <Skeleton variant="text" />
-                </div>
-              </div>
-            </div>
+      <div className="min-h-[80vh] px-6 py-10 bg-base-200">
+        <h1 className="text-3xl font-bold mb-8">Connection Requests</h1>
+
+        <div className="space-y-6 max-w-5xl mx-auto">
+          {[...Array(4)].map((_, i) => (
+            <SkeletonRequestCard key={i} />
           ))}
         </div>
       </div>
     );
   }
 
-  // 📭 Empty State
-  if (!requests || requests.length === 0) {
-    return (
-      <div className="min-h-[calc(100vh-200px)] flex items-center justify-center">
-        <div className="card-modern p-12 text-center">
-          <h2 className="text-2xl font-bold mb-2">No Connection Requests</h2>
-          <p className="text-gray-400">
-            You don’t have any pending requests right now.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  // 🚀 Main UI
   return (
-    <div className="min-h-[calc(100vh-200px)] px-4 py-8">
-      <div className="max-w-5xl mx-auto space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-2xl font-bold">Connection Requests</h1>
-          <p className="text-sm text-gray-400">
-            {requests.length} pending request(s)
+    <div className="min-h-[80vh] px-6 py-10 bg-base-200">
+      <h1 className="text-3xl font-bold mb-2">Connection Requests</h1>
+      <p className="text-sm opacity-70 mb-8">
+        {requests.length} pending request(s)
+      </p>
+
+      {/* 🔹 Empty State */}
+      {requests.length === 0 ? (
+        <div className="flex flex-col items-center justify-center text-center mt-20 opacity-70">
+          <img
+            src="https://cdn-icons-png.flaticon.com/512/4076/4076549.png"
+            alt="No requests"
+            className="w-28 h-28 mb-6 opacity-80"
+          />
+          <h2 className="text-xl font-semibold mb-2">No pending requests</h2>
+          <p className="text-sm max-w-md">
+            When someone sends you a connection request, it will appear here.
           </p>
         </div>
-
-        {/* Requests List */}
-        {requests.map((req) => {
-          const requestUser = req.fromUserId;
-          if (!requestUser) return null;
-
-          return (
+      ) : (
+        /* 🔹 Requests List */
+        <div className="space-y-6 max-w-5xl mx-auto">
+          {requests.map((req) => (
             <RequestCard
               key={req._id}
-              user={requestUser}
-              loading={actionLoading === req._id}
-              onAccept={() => handleReview("accepted", req._id)}
-              onReject={() => handleReview("rejected", req._id)}
+              user={req.fromUserId} // ✅ correct mapping
+              loading={loadingId === req._id}
+              onAccept={() => handleReview(req._id, "accepted")}
+              onReject={() => handleReview(req._id, "rejected")}
             />
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

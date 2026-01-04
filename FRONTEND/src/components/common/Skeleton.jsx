@@ -1,7 +1,6 @@
 const SkeletonBase = ({ className = "", variant = "default" }) => {
   const variants = {
     default: "skeleton",
-    card: "skeleton h-64 rounded-2xl",
     avatar: "skeleton w-24 h-24 rounded-full",
     text: "skeleton h-4 rounded",
     title: "skeleton h-6 rounded w-3/4",
@@ -11,38 +10,53 @@ const SkeletonBase = ({ className = "", variant = "default" }) => {
   return <div className={`${variants[variant]} ${className}`} />;
 };
 
-export const SkeletonCard = () => {
-  return (
-    <div className="card-modern p-6 space-y-4">
-      <SkeletonBase variant="avatar" className="mx-auto" />
-      <SkeletonBase variant="title" className="mx-auto" />
-      <SkeletonBase variant="text" className="w-full" />
-      <SkeletonBase variant="text" className="w-5/6 mx-auto" />
-      <div className="flex gap-2 justify-center">
-        <SkeletonBase variant="button" />
-        <SkeletonBase variant="button" />
+/* =========================
+   Feed → User Card
+========================= */
+export const SkeletonUserCard = () => (
+  <div className="card-modern p-6 space-y-4">
+    <SkeletonBase variant="avatar" className="mx-auto" />
+    <SkeletonBase variant="title" className="mx-auto" />
+    <SkeletonBase variant="text" />
+    <SkeletonBase variant="text" className="w-5/6 mx-auto" />
+    <div className="flex justify-center gap-2">
+      <SkeletonBase variant="button" />
+      <SkeletonBase variant="button" />
+    </div>
+  </div>
+);
+
+/* =========================
+   Requests → Request Card
+========================= */
+export const SkeletonRequestCard = () => (
+  <div className="rounded-2xl bg-[#0f141a] border border-white/10 p-6 space-y-4">
+    <div className="flex items-center gap-4">
+      <SkeletonBase variant="avatar" />
+      <div className="flex-1 space-y-2">
+        <SkeletonBase variant="title" className="w-40" />
+        <SkeletonBase variant="text" />
       </div>
     </div>
-  );
-};
 
-export const SkeletonConnectionCard = () => {
-  return (
-    <div className="card-modern card-modern-hover p-6">
-      <div className="flex flex-col items-center space-y-4">
-        <SkeletonBase variant="avatar" />
-        <SkeletonBase variant="title" className="w-32" />
-        <SkeletonBase variant="text" className="w-full" />
-        <div className="flex gap-2 flex-wrap justify-center w-full">
-          <SkeletonBase variant="button" className="h-6 w-16" />
-          <SkeletonBase variant="button" className="h-6 w-16" />
-          <SkeletonBase variant="button" className="h-6 w-16" />
-        </div>
-      </div>
+    <div className="flex gap-3 pt-4">
+      <SkeletonBase variant="button" />
+      <SkeletonBase variant="button" />
     </div>
-  );
-};
+  </div>
+);
 
-const Skeleton = SkeletonBase;
+/* =========================
+   Connections → Connected User
+========================= */
+export const SkeletonConnectionCard = () => (
+  <div className="rounded-2xl bg-base-100 border border-white/10 p-5 flex items-center gap-4">
+    <SkeletonBase variant="avatar" />
+    <div className="flex-1 space-y-2">
+      <SkeletonBase variant="title" className="w-32" />
+      <SkeletonBase variant="text" className="w-1/2" />
+    </div>
+  </div>
+);
 
-export default Skeleton;
+export default SkeletonBase;

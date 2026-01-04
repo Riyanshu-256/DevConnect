@@ -7,14 +7,23 @@ const feedSlice = createSlice({
     addFeed: (state, action) => {
       return action.payload;
     },
-    addConnections: (state, action) => {
-      return action.payload;
+
+    updateFeedUserStatus: (state, action) => {
+      const { userId, status } = action.payload;
+      const user = state.find((u) => u._id === userId);
+      if (user) {
+        user.status = status;
+      }
     },
+
     clearFeed: () => {
       return [];
     },
   },
 });
 
-export const { addFeed, addConnections, clearFeed } = feedSlice.actions;
+// ✅ named exports (actions)
+export const { addFeed, updateFeedUserStatus, clearFeed } = feedSlice.actions;
+
+// ✅ DEFAULT EXPORT (VERY IMPORTANT)
 export default feedSlice.reducer;

@@ -87,6 +87,30 @@ requestRouter.get("/user/request/received", userAuth, async (req, res) => {
 });
 
 /* =====================================================
+   GET SENT CONNECTION REQUESTS
+   GET /user/request/sent
+===================================================== */
+requestRouter.get("/user/request/sent", userAuth, async (req, res) => {
+  try {
+    const loggedInUserId = req.user._id;
+
+    const sentRequests = await ConnectionRequest.find({
+      fromUserId: loggedInUserId,
+    }).populate(
+      "toUserId",
+      "firstName lastName photoUrl age gender skills about"
+    );
+
+    res.json({
+      message: "Sent connection requests",
+      data: sentRequests,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+/* =====================================================
    REVIEW CONNECTION REQUEST (ACCEPT / REJECT)
    POST /request/review/:status/:requestId
 ===================================================== */
