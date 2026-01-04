@@ -5,7 +5,7 @@ import axios from "axios";
 import { BASE_URL } from "../utils/constants";
 import { setRequests, removeRequest } from "../store/slices/requestSlice";
 import Skeleton from "../components/common/Skeleton";
-const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+import RequestCard from "../components/cards/RequestCard";
 
 const Requests = () => {
   const dispatch = useDispatch();
@@ -17,12 +17,12 @@ const Requests = () => {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null);
 
-  // Redirect if not logged in
+  // 🔐 Auth Guard
   useEffect(() => {
     if (!user) navigate("/login");
   }, [user, navigate]);
 
-  // Fetch received requests
+  // 📡 Fetch Requests
   useEffect(() => {
     if (!user) return;
 
@@ -34,11 +34,9 @@ const Requests = () => {
 
         dispatch(setRequests(res.data.data || []));
       } catch (err) {
-        if (err.response?.status === 401) {
-          navigate("/login");
-        } else {
-          console.error("Failed to fetch requests");
-        }
+        err.response?.status === 401
+          ? navigate("/login")
+          : console.error("Failed to fetch requests");
       } finally {
         setLoading(false);
       }
@@ -47,7 +45,7 @@ const Requests = () => {
     fetchRequests();
   }, [dispatch, user, navigate]);
 
-  // Accept / Reject handler
+  // ✅ Accept / ❌ Reject
   const handleReview = async (status, requestId) => {
     try {
       setActionLoading(requestId);
@@ -59,23 +57,20 @@ const Requests = () => {
       );
 
       dispatch(removeRequest(requestId));
-      console.log(`Request ${status}`);
     } catch (err) {
-      if (err.response?.status === 401) {
-        navigate("/login");
-      } else {
-        console.error("Action failed");
-      }
+      err.response?.status === 401
+        ? navigate("/login")
+        : console.error("Request action failed");
     } finally {
       setActionLoading(null);
     }
   };
 
-  // Loading state
+  // ⏳ Loading UI
   if (loading) {
     return (
       <div className="min-h-[calc(100vh-200px)] px-4 py-8">
-        <div className="max-w-4xl mx-auto space-y-6">
+        <div className="max-w-5xl mx-auto space-y-6">
           <Skeleton variant="title" className="h-8 w-64" />
           {[...Array(3)].map((_, i) => (
             <div key={i} className="card-modern p-6">
@@ -94,77 +89,45 @@ const Requests = () => {
     );
   }
 
-  // Empty state
+  // 📭 Empty State
   if (!requests || requests.length === 0) {
     return (
       <div className="min-h-[calc(100vh-200px)] flex items-center justify-center">
         <div className="card-modern p-12 text-center">
-          <div className="text-6xl mb-4">📬</div>
           <h2 className="text-2xl font-bold mb-2">No Connection Requests</h2>
-          <p className="text-gray-400">You don’t have any pending requests</p>
+          <p className="text-gray-400">
+            You don’t have any pending requests right now.
+          </p>
         </div>
       </div>
     );
   }
 
-  // Main UI
+  // 🚀 Main UI
   return (
     <div className="min-h-[calc(100vh-200px)] px-4 py-8">
-      <div className="max-w-4xl mx-auto space-y-4">
+      <div className="max-w-5xl mx-auto space-y-6">
+        {/* Header */}
+        <div>
+          <h1 className="text-2xl font-bold">Connection Requests</h1>
+          <p className="text-sm text-gray-400">
+            {requests.length} pending request(s)
+          </p>
+        </div>
+
+        {/* Requests List */}
         {requests.map((req) => {
           const requestUser = req.fromUserId;
           if (!requestUser) return null;
 
-          const isLoading = actionLoading === req._id;
-
           return (
-            <div
+            <RequestCard
               key={req._id}
-              className="card-modern p-6 flex flex-col sm:flex-row gap-6"
-            >
-              <img
-                src={requestUser.photoUrl || DEFAULT_AVATAR}
-                alt="profile"
-                className="w-24 h-24 rounded-full object-cover"
-                onError={(e) => (e.currentTarget.src = DEFAULT_AVATAR)}
-              />
-
-              <div className="flex-1 space-y-2">
-                <h2 className="text-xl font-semibold">
-                  {requestUser.firstName} {requestUser.lastName}
-                </h2>
-
-                {(requestUser.age || requestUser.gender) && (
-                  <p className="text-sm text-gray-400">
-                    {requestUser.age && `${requestUser.age} years`}
-                    {requestUser.age && requestUser.gender && " • "}
-                    {requestUser.gender}
-                  </p>
-                )}
-
-                {requestUser.about && (
-                  <p className="text-sm text-gray-300">{requestUser.about}</p>
-                )}
-              </div>
-
-              <div className="flex gap-3">
-                <button
-                  disabled={isLoading}
-                  onClick={() => handleReview("accepted", req._id)}
-                  className="btn-modern"
-                >
-                  ✓ Accept
-                </button>
-
-                <button
-                  disabled={isLoading}
-                  onClick={() => handleReview("rejected", req._id)}
-                  className="btn-modern-outline"
-                >
-                  ✕ Reject
-                </button>
-              </div>
-            </div>
+              user={requestUser}
+              loading={actionLoading === req._id}
+              onAccept={() => handleReview("accepted", req._id)}
+              onReject={() => handleReview("rejected", req._id)}
+            />
           );
         })}
       </div>

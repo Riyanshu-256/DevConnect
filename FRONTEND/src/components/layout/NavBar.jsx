@@ -5,6 +5,7 @@ import axios from "axios";
 import { removeUser } from "../../store/slices/userSlice";
 import { BASE_URL } from "../../utils/constants";
 import logo from "../../assets/logo.png";
+import { User, Users, Mail, LogOut } from "lucide-react";
 
 const NavBar = () => {
   const navigate = useNavigate();
@@ -89,49 +90,80 @@ const NavBar = () => {
                 <div className="w-10 rounded-full ring ring-primary ring-offset-2 ring-offset-base-100">
                   <img
                     src={
-                      user.photoUrl ||
-                      "https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"
+                      user?.photoUrl?.startsWith("http")
+                        ? user.photoUrl
+                        : DEFAULT_AVATAR
                     }
                     alt="User Avatar"
                   />
                 </div>
               </div>
             </div>
-
             {/* DROPDOWN MENU */}
             <ul
               tabIndex={0}
-              className="menu menu-sm dropdown-content mt-4 w-56 rounded-2xl bg-base-100 p-3 shadow-xl border border-base-200"
+              className="menu dropdown-content mt-4 w-60 rounded-2xl 
+             bg-base-100 p-3 shadow-2xl 
+             border border-base-200 
+             animate-in fade-in zoom-in-95"
             >
-              <li className="menu-title px-2">
-                <span className="text-xs uppercase tracking-wide text-gray-400">
+              {/* Title */}
+              <li className="menu-title px-2 mb-1">
+                <span className="text-xs uppercase tracking-wider text-base-content/50">
                   Account
                 </span>
               </li>
 
+              {/* Profile */}
               <li>
-                <a onClick={() => navigate("/profile")}>👤 Profile</a>
-              </li>
-
-              <li>
-                <a onClick={() => navigate("/connections")}>Connections</a>
-              </li>
-
-              <li>
-                <a onClick={() => navigate("/requests")}>Requests</a>
-              </li>
-
-              <div className="divider my-1"></div>
-
-              <li>
-                <a
-                  onClick={handleLogout}
-                  className={`text-error ${
-                    loggingOut ? "opacity-50 pointer-events-none" : ""
-                  }`}
+                <button
+                  onClick={() => navigate("/profile")}
+                  className="flex items-center gap-3 rounded-lg px-3 py-2 
+                 hover:bg-base-200 transition"
                 >
-                  🚪 {loggingOut ? "Logging out..." : "Logout"}
-                </a>
+                  <User size={16} className="opacity-70" />
+                  <span>Profile</span>
+                </button>
+              </li>
+
+              {/* Connections */}
+              <li>
+                <button
+                  onClick={() => navigate("/connections")}
+                  className="flex items-center gap-3 rounded-lg px-3 py-2 
+                 hover:bg-base-200 transition"
+                >
+                  <Users size={16} className="opacity-70" />
+                  <span>Connections</span>
+                </button>
+              </li>
+
+              {/* Requests */}
+              <li>
+                <button
+                  onClick={() => navigate("/requests")}
+                  className="flex items-center gap-3 rounded-lg px-3 py-2 
+                 hover:bg-base-200 transition"
+                >
+                  <Mail size={16} className="opacity-70" />
+                  <span>Requests</span>
+                </button>
+              </li>
+
+              <div className="divider my-2"></div>
+
+              {/* Logout */}
+              <li>
+                <button
+                  onClick={handleLogout}
+                  disabled={loggingOut}
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2 
+        text-error hover:bg-error/10 transition
+        ${loggingOut ? "opacity-50 cursor-not-allowed" : ""}`}
+                >
+                  <LogOut size={16} />
+                  <span>{loggingOut ? "Logging out..." : "Logout"}</span>
+                </button>
               </li>
             </ul>
           </div>

@@ -1,10 +1,11 @@
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
 import { BASE_URL } from "../utils/constants";
 import { addFeed } from "../store/slices/feedSlice";
-import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
 import UserCard from "../components/cards/UserCard";
-import { SkeletonCard } from "../components/common/Skeleton";
+import { Users, Info } from "lucide-react";
+
 const Feed = () => {
   const dispatch = useDispatch();
   const feed = useSelector((store) => store.feed);
@@ -12,93 +13,99 @@ const Feed = () => {
 
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
-  const [actionType, setActionType] = useState(null);
 
-  // Fetch feed
+  /* 🔹 Fetch Feed */
   useEffect(() => {
     if (!user) {
       setLoading(false);
       return;
     }
 
-    const getFeed = async () => {
+    const fetchFeed = async () => {
       try {
         const res = await axios.get(`${BASE_URL}/feed`, {
           withCredentials: true,
         });
-
         dispatch(addFeed(res.data.data || res.data));
       } catch (err) {
-        console.error("Feed error:", err.response?.data || err.message);
+        console.error(err);
       } finally {
         setLoading(false);
       }
     };
 
-    getFeed();
+    fetchFeed();
   }, [dispatch, user]);
 
-  // Handle Skip / Connect
-  const handleAction = async (toUserId, status) => {
+  /* 🔹 Handle Ignore / Interested */
+  const handleAction = async (toUserId, action) => {
     try {
       setActionLoading(true);
-      setActionType(status);
 
       await axios.post(
-        `${BASE_URL}/request/send/${status}/${toUserId}`,
+        `${BASE_URL}/request/send/${action}/${toUserId}`,
         {},
         { withCredentials: true }
       );
 
-      // SAFE removal using latest state
+      // Optimistic update – remove from feed
       dispatch(addFeed(feed.filter((u) => u._id !== toUserId)));
     } catch (err) {
-      console.error(
-        "Action error:",
-        err.response?.data?.message || err.message
-      );
+      console.error("Action failed:", err.message);
     } finally {
       setActionLoading(false);
-      setActionType(null);
     }
   };
 
-  // Loading
+  /* 🔹 Loading */
   if (loading) {
     return (
-      <div className="min-h-[calc(100vh-200px)] flex items-center justify-center px-4 py-12">
-        <SkeletonCard />
+      <div className="min-h-[70vh] flex justify-center items-center">
+        <span className="loading loading-spinner loading-lg" />
       </div>
     );
   }
 
-  // Empty feed
+  /* 🔹 Empty Feed */
   if (!feed || feed.length === 0) {
     return (
-      <div className="min-h-[calc(100vh-200px)] flex flex-col items-center justify-center text-center px-4">
-        <div className="card-modern p-12 max-w-md">
-          <div className="text-6xl mb-4">👋</div>
-          <h2 className="text-2xl font-bold text-gray-100 mb-2">
-            No More Profiles
-          </h2>
-          <p className="text-gray-400">
-            You've seen all available developers. Check back later for new
-            connections!
+      <div className="min-h-[70vh] flex justify-center items-center">
+        <div className="text-center">
+          <Users size={40} className="mx-auto text-primary mb-3" />
+          <h2 className="text-xl font-semibold">No more developers in feed</h2>
+          <p className="text-sm text-base-content/60 mt-1">
+            You’ve interacted with all available profiles.
           </p>
         </div>
       </div>
     );
   }
 
-  // Show first card (Tinder-style)
   return (
-    <div className="min-h-[calc(100vh-200px)] flex items-center justify-center px-4 py-12">
-      <UserCard
-        user={feed[0]}
-        loading={actionLoading}
-        actionType={actionType}
-        onAction={handleAction}
-      />
+    <div className="min-h-[80vh] px-4 py-10 bg-base-200">
+      <div className="max-w-5xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold">Developer Feed</h1>
+          <p className="text-base-content/60 mt-2">
+            Discover developers you haven’t connected with yet
+          </p>
+          <div className="inline-flex items-center gap-2 text-xs text-base-content/50 mt-3">
+            <Info size={14} />
+            Based on availability, connections & requests
+          </div>
+        </div>
+
+        {/* Feed Card */}
+        <div className="flex justify-center">
+          <UserCard
+            user={feed[0]}
+            loading={actionLoading}
+            onIgnore={() => handleAction(feed[0]._id, "ignored")}
+            onInterested={() => handleAction(feed[0]._id, "interested")}
+          />
+        </div>
+      </div>
     </div>
   );
 };

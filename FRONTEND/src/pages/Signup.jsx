@@ -1,21 +1,60 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { FaEnvelope, FaLock, FaEye, FaEyeSlash, FaUser } from "react-icons/fa";
+import {
+  FaEnvelope,
+  FaLock,
+  FaEye,
+  FaEyeSlash,
+  FaUser,
+  FaUserCircle,
+} from "react-icons/fa";
 
 import { BASE_URL } from "../utils/constants";
+
+const DEFAULT_PHOTO = "https://cdn-icons-png.flaticon.com/512/4140/4140047.png";
 
 const Signup = () => {
   const navigate = useNavigate();
 
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [emailId, setEmailId] = useState("");
-  const [password, setPassword] = useState("");
+  /* =======================
+     FORM STATE
+  ======================= */
+  const [form, setForm] = useState({
+    firstName: "",
+    lastName: "",
+    emailId: "",
+    password: "",
+    age: "",
+    gender: "",
+    about: "",
+    photoUrl: DEFAULT_PHOTO,
+  });
 
+  const [skills, setSkills] = useState([]);
+  const [skillInput, setSkillInput] = useState("");
+
+  /* =======================
+     UI STATE
+  ======================= */
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  /* =======================
+     HANDLERS
+  ======================= */
+  const updateField = (key, value) =>
+    setForm((prev) => ({ ...prev, [key]: value }));
+
+  const addSkill = () => {
+    const value = skillInput.trim();
+    if (!value || skills.includes(value)) return;
+    setSkills([...skills, value]);
+    setSkillInput("");
+  };
+
+  const removeSkill = (skill) => setSkills(skills.filter((s) => s !== skill));
 
   const handleSignup = async (e) => {
     e.preventDefault();
@@ -26,7 +65,7 @@ const Signup = () => {
 
       await axios.post(
         `${BASE_URL}/signup`,
-        { firstName, lastName, emailId, password },
+        { ...form, skills },
         { withCredentials: true }
       );
 
@@ -38,71 +77,55 @@ const Signup = () => {
     }
   };
 
+  /* =======================
+     UI
+  ======================= */
   return (
     <div className="min-h-screen flex items-center justify-center bg-auth-gradient px-4">
-      <div className="auth-card hover-lift w-full max-w-md animate-fadeUp">
+      <div className="auth-card w-full max-w-2xl animate-fadeUp my-10">
         {/* Header */}
-        <div className="text-center mb-6">
+        <div className="text-center mb-8 ">
           <h1 className="text-3xl font-bold text-white">Create your account</h1>
           <p className="text-gray-400 text-sm mt-2">
-            Join DevConnect and start building your network
+            Join <span className="text-primary font-medium">DevConnect</span>{" "}
+            and start building your professional network
           </p>
         </div>
 
         {/* Error */}
-        {error && (
-          <p className="text-error text-sm text-center mb-4">{error}</p>
-        )}
+        {error && <div className="alert alert-error text-sm mb-5">{error}</div>}
 
         {/* Form */}
-        <form onSubmit={handleSignup} className="space-y-4">
+        <form onSubmit={handleSignup} className="space-y-6">
           {/* Name */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="label my-1">
-                <span className="label-text flex items-center gap-2">
-                  <FaUser /> First Name
-                </span>
-              </label>
-              <input
-                className="input input-bordered w-full"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                required
-              />
-            </div>
-
-            <div>
-              <label className="label my-1">
-                <span className="label-text">Last Name</span>
-              </label>
-              <input
-                className="input input-bordered w-full"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-              />
-            </div>
-          </div>
-
-          {/* Email */}
-          <div>
-            <label className="label my-1">
-              <span className="label-text flex items-center gap-2">
-                <FaEnvelope /> Email
-              </span>
-            </label>
-            <input
-              type="email"
-              className="input input-bordered w-full"
-              value={emailId}
-              onChange={(e) => setEmailId(e.target.value)}
+          <div className="grid sm:grid-cols-2 gap-4">
+            <Input
+              icon={<FaUser />}
+              label="First Name"
+              value={form.firstName}
+              onChange={(e) => updateField("firstName", e.target.value)}
               required
+            />
+            <Input
+              label="Last Name"
+              value={form.lastName}
+              onChange={(e) => updateField("lastName", e.target.value)}
             />
           </div>
 
+          {/* Email */}
+          <Input
+            type="email"
+            icon={<FaEnvelope />}
+            label="Email address"
+            value={form.emailId}
+            onChange={(e) => updateField("emailId", e.target.value)}
+            required
+          />
+
           {/* Password */}
           <div>
-            <label className="label my-1">
+            <label className="label">
               <span className="label-text flex items-center gap-2">
                 <FaLock /> Password
               </span>
@@ -111,8 +134,8 @@ const Signup = () => {
               <input
                 type={showPassword ? "text" : "password"}
                 className="input input-bordered w-full pr-10"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                value={form.password}
+                onChange={(e) => updateField("password", e.target.value)}
                 required
               />
               <button
@@ -123,11 +146,93 @@ const Signup = () => {
                 {showPassword ? <FaEyeSlash /> : <FaEye />}
               </button>
             </div>
-
             <p className="text-xs text-gray-400 mt-1">
-              Use at least 8 characters with a mix of letters & symbols
+              Minimum 8 characters, include symbols & numbers
             </p>
           </div>
+
+          {/* Age + Gender */}
+          <div className="grid sm:grid-cols-2 gap-4">
+            <input
+              type="number"
+              min={18}
+              placeholder="Age"
+              className="input input-bordered"
+              value={form.age}
+              onChange={(e) => updateField("age", e.target.value)}
+            />
+            <select
+              className="select select-bordered"
+              value={form.gender}
+              onChange={(e) => updateField("gender", e.target.value)}
+            >
+              <option value="">Select Gender</option>
+              <option>Male</option>
+              <option>Female</option>
+              <option>Other</option>
+            </select>
+          </div>
+
+          {/* About */}
+          <textarea
+            rows={3}
+            className="textarea textarea-bordered w-full"
+            placeholder="Briefly describe yourself (role, interests, goals)"
+            value={form.about}
+            onChange={(e) => updateField("about", e.target.value)}
+          />
+
+          {/* Skills */}
+          <div>
+            <label className="label">
+              <span className="label-text">Skills</span>
+            </label>
+            <div className="flex gap-2">
+              <input
+                className="input input-bordered flex-1"
+                placeholder="Add skill and press Enter"
+                value={skillInput}
+                onChange={(e) => setSkillInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && addSkill()}
+              />
+              <button
+                type="button"
+                onClick={addSkill}
+                className="btn btn-primary btn-sm"
+              >
+                Add
+              </button>
+            </div>
+
+            {skills.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-3">
+                {skills.map((skill) => (
+                  <span
+                    key={skill}
+                    className="badge badge-primary badge-outline gap-2"
+                  >
+                    {skill}
+                    <button
+                      type="button"
+                      onClick={() => removeSkill(skill)}
+                      className="opacity-70 hover:opacity-100"
+                    >
+                      ✕
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Photo URL */}
+          <Input
+            icon={<FaUserCircle />}
+            label="Profile Photo URL"
+            placeholder="https://example.com/profile.jpg"
+            value={form.photoUrl}
+            onChange={(e) => updateField("photoUrl", e.target.value)}
+          />
 
           {/* Submit */}
           <button
@@ -145,21 +250,33 @@ const Signup = () => {
         <div className="text-center mt-6 space-y-2">
           <p className="text-sm text-gray-400">
             Already have an account?{" "}
-            <Link
-              to="/login"
-              className="text-blue-400 hover:text-blue-300 underline-offset-4 hover:underline transition"
-            >
+            <Link to="/login" className="text-primary hover:underline">
               Sign in
             </Link>
           </p>
-
           <p className="text-xs text-gray-500">
-            Secure signup using HttpOnly cookies
+            Secure authentication using HttpOnly cookies
           </p>
         </div>
       </div>
     </div>
   );
 };
+
+/* =======================
+   REUSABLE INPUT
+======================= */
+const Input = ({ label, icon, type = "text", ...props }) => (
+  <div>
+    {label && (
+      <label className="label">
+        <span className="label-text flex items-center gap-2">
+          {icon} {label}
+        </span>
+      </label>
+    )}
+    <input type={type} className="input input-bordered w-full" {...props} />
+  </div>
+);
 
 export default Signup;
