@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { BASE_URL } from "../utils/constants";
 import { addConnections } from "../utils/connectionSlice";
-import Skeleton, { SkeletonConnectionCard } from "./Skeleton";
+import { SkeletonConnectionCard } from "./Skeleton";
 
 const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
 
@@ -30,6 +30,7 @@ const Connections = () => {
       });
 
       dispatch(addConnections(res.data.data || []));
+      setError("");
     } catch (err) {
       if (err.response?.status === 401) {
         navigate("/login");
@@ -72,7 +73,9 @@ const Connections = () => {
         <div className="card-modern p-12 text-center">
           <div className="text-5xl mb-4">🔗</div>
           <h2 className="text-xl font-semibold">No Connections Yet</h2>
-          <p className="text-gray-400 mt-2">Start connecting with developers</p>
+          <p className="text-gray-400 mt-2">
+            Accept requests to start chatting
+          </p>
         </div>
       </div>
     );

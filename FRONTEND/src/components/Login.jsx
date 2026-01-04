@@ -30,7 +30,7 @@ const Login = () => {
       );
 
       dispatch(addUser(res.data));
-      navigate("/");
+      navigate("/feed");
     } catch (err) {
       setError(err.response?.data?.error || "Invalid credentials");
     } finally {

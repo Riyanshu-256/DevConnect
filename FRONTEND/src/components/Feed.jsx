@@ -12,13 +12,19 @@ const Feed = () => {
   const user = useSelector((store) => store.user);
 
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [actionType, setActionType] = useState(null);
 
+  // Fetch feed
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
     const getFeed = async () => {
       try {
-        const res = await axios.get(`${BASE_URL}/user/feed`, {
+        const res = await axios.get(`${BASE_URL}/feed`, {
           withCredentials: true,
         });
 
@@ -33,10 +39,32 @@ const Feed = () => {
     getFeed();
   }, [dispatch, user]);
 
-  const removeUserFromFeed = (userId) => {
-    dispatch(addFeed(feed.filter((u) => u._id !== userId)));
+  // Handle Skip / Connect
+  const handleAction = async (toUserId, status) => {
+    try {
+      setActionLoading(true);
+      setActionType(status);
+
+      await axios.post(
+        `${BASE_URL}/request/send/${status}/${toUserId}`,
+        {},
+        { withCredentials: true }
+      );
+
+      // SAFE removal using latest state
+      dispatch(addFeed(feed.filter((u) => u._id !== toUserId)));
+    } catch (err) {
+      console.error(
+        "Action error:",
+        err.response?.data?.message || err.message
+      );
+    } finally {
+      setActionLoading(false);
+      setActionType(null);
+    }
   };
 
+  // Loading
   if (loading) {
     return (
       <div className="min-h-[calc(100vh-200px)] flex items-center justify-center px-4 py-12">
@@ -45,6 +73,7 @@ const Feed = () => {
     );
   }
 
+  // Empty feed
   if (!feed || feed.length === 0) {
     return (
       <div className="min-h-[calc(100vh-200px)] flex flex-col items-center justify-center text-center px-4">
@@ -62,9 +91,15 @@ const Feed = () => {
     );
   }
 
+  // Show first card (Tinder-style)
   return (
     <div className="min-h-[calc(100vh-200px)] flex items-center justify-center px-4 py-12">
-      <UserCard user={feed[0]} onAction={removeUserFromFeed} />
+      <UserCard
+        user={feed[0]}
+        loading={actionLoading}
+        actionType={actionType}
+        onAction={handleAction}
+      />
     </div>
   );
 };
